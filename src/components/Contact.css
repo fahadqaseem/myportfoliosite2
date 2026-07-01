@@ -54,7 +54,31 @@
   font-size: 1.1rem;
   line-height: 1.6;
   color: var(--color-text-secondary);
-  margin-bottom: 3rem;
+  margin-bottom: 1.5rem;
+}
+
+.call-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  padding: 0.95rem 1.5rem;
+  margin-bottom: 2.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-text-primary);
+  color: var(--color-surface-1);
+  text-decoration: none;
+  font-size: 0.98rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  box-shadow: var(--shadow-sm);
+  transition: background 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.call-button:hover {
+  background: var(--color-accent-1);
+  color: var(--color-surface-1);
+  box-shadow: var(--shadow-md);
 }
 
 .contact-socials {
