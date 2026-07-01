@@ -3,7 +3,8 @@ import { motion, useScroll, useTransform } from 'framer-motion';
 import { Mail, Send } from 'lucide-react';
 import './Contact.css';
 
-const CONTACT_EMAIL = 'fahad.qaseeem@gmail.com';
+const CONTACT_EMAIL = 'fahadq@wayne.edu';
+const CONTACT_PHONE = '313 9103524';
 const GITHUB_URL = 'https://github.com/fahadqaseem';
 const LINKEDIN_URL = 'https://linkedin.com/in/fahadqaseem/';
 
@@ -54,7 +55,7 @@ export default function Contact() {
         <div className="contact-info">
           <h2 className="contact-title">Let's Connect</h2>
           <p className="contact-desc">
-            Always open to discussing new opportunities, interesting projects, or just chatting about AI and engineering.
+            People who are interested can call me at {CONTACT_PHONE} or email me at {CONTACT_EMAIL}.
           </p>
           <div className="contact-socials">
             <motion.a href={mailto} className="social-link" whileHover={{ scale: 1.1, y: -2 }} whileTap={{ scale: 0.9 }}>
