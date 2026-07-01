@@ -1,6 +1,6 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Mail, Send } from 'lucide-react';
+import { Mail } from 'lucide-react';
 import './Contact.css';
 
 const CONTACT_EMAIL = 'fahadq@wayne.edu';
@@ -26,9 +26,6 @@ function LinkedInIcon({ size = 24 }) {
 
 export default function Contact() {
   const containerRef = useRef(null);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [message, setMessage] = useState('');
   const { scrollYProgress } = useScroll({
     target: containerRef,
     offset: ["start end", "end end"]
@@ -36,22 +33,11 @@ export default function Contact() {
 
   const y = useTransform(scrollYProgress, [0, 1], [100, 0]);
   const opacity = useTransform(scrollYProgress, [0, 1], [0, 1]);
-
-  const mailto = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(`Contact from ${name || 'Website'}`)}&body=${encodeURIComponent(`${message}\n\nFrom: ${name}\nEmail: ${email}`)}`;
-
-  function openMailClient() {
-    const link = document.createElement('a');
-    link.href = mailto;
-    link.target = '_self';
-    link.rel = 'noopener noreferrer';
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  }
+  const mailto = `mailto:${CONTACT_EMAIL}`;
 
   return (
     <section id="contact" ref={containerRef} className="contact-section">
-      <motion.div style={{ y, opacity }} className="contact-container glass-panel">
+      <motion.div style={{ y, opacity }} className="contact-container contact-container--single glass-panel">
         <div className="contact-info">
           <h2 className="contact-title">Let's Connect</h2>
           <p className="contact-desc">
@@ -69,39 +55,6 @@ export default function Contact() {
             </motion.a>
           </div>
         </div>
-
-        <form
-          className="contact-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            openMailClient();
-          }}
-        >
-          <div className="input-group">
-            <input type="text" id="name" required placeholder=" " value={name} onChange={(e) => setName(e.target.value)} />
-            <label htmlFor="name">Name</label>
-            <div className="input-border"></div>
-          </div>
-          <div className="input-group">
-            <input type="email" id="email" required placeholder=" " value={email} onChange={(e) => setEmail(e.target.value)} />
-            <label htmlFor="email">Email</label>
-            <div className="input-border"></div>
-          </div>
-          <div className="input-group">
-            <textarea id="message" required placeholder=" " rows={4} value={message} onChange={(e) => setMessage(e.target.value)}></textarea>
-            <label htmlFor="message">Message</label>
-            <div className="input-border"></div>
-          </div>
-          <motion.button 
-            type="submit" 
-            className="submit-btn"
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-          >
-            Send Message
-            <Send size={18} className="send-icon" />
-          </motion.button>
-        </form>
       </motion.div>
     </section>
   );
