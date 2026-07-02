@@ -16,6 +16,7 @@ const COLOR_BRIGHT = 0x4c7a9e;
 const COLOR_EDGE = 0x173f35;
 
 const MAX_DESKTOP_PIXEL_RATIO = 2.5;
+const MAX_MOBILE_PIXEL_RATIO = 1.75;
 const MAX_TEXTURE_ANISOTROPY = 8;
 const CAMERA_FOV = 44;
 const CAMERA_DISTANCE = 2;
@@ -539,11 +540,11 @@ export default function KnightScene() {
     if (!canvas) return undefined;
 
     const mobileOptions = {
-      pixelRatio: Math.min(window.devicePixelRatio, 1),
-      bloomStrength: 0.12,
+      pixelRatio: Math.min(window.devicePixelRatio, MAX_MOBILE_PIXEL_RATIO),
+      bloomStrength: 0.08,
       bloomRadius: 0.25,
       dof: false,
-      antialias: false,
+      antialias: true,
       powerPreference: 'low-power',
       useComposer: false,
     };
