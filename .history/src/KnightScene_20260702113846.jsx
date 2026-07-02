@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader.js';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
@@ -7,22 +8,13 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 
-const DEFAULT_CARD_FRONT_URL = '/cards/wsu_card_front.svg';
-const DEFAULT_CARD_BACK_URL = '/cards/wsu_card_back.svg';
+const DEFAULT_MODEL_URL = '/models/knight.stl';
 
 const COLOR_DEEP = 0x143a5a;
 const COLOR_MID = 0x35678c;
 const COLOR_BRIGHT = 0x4c7a9e;
-const COLOR_EDGE = 0x173f35;
 
-const MAX_DESKTOP_PIXEL_RATIO = 2.5;
-const MAX_TEXTURE_ANISOTROPY = 8;
-const CAMERA_FOV = 44;
-const CAMERA_DISTANCE = 2;
-const CARD_HEIGHT = 0.66;
-const CARD_ASPECT = 1.586;
-const CARD_DEPTH = 0.009;
-const CARD_CORNER_RADIUS = 0.06;
+const MODEL_HEIGHT = 0.66;
 const DRAG_SENSITIVITY = 0.012;
 const IDLE_SPIN_SPEED = 0.18;
 const FLOAT_AMP = 0.012;
@@ -48,9 +40,8 @@ class KnightSceneController {
   constructor(canvas, options = {}) {
     this.canvas = canvas;
     this.options = {
-      pixelRatio: Math.min(window.devicePixelRatio, MAX_DESKTOP_PIXEL_RATIO),
-      cardFrontUrl: options.cardFrontUrl ?? DEFAULT_CARD_FRONT_URL,
-      cardBackUrl: options.cardBackUrl ?? DEFAULT_CARD_BACK_URL,
+      pixelRatio: Math.min(window.devicePixelRatio, 2),
+      modelUrl: options.modelUrl ?? DEFAULT_MODEL_URL,
       bloomStrength: options.bloomStrength ?? 0.42,
       bloomRadius: options.bloomRadius ?? 0.55,
       dof: options.dof ?? true,
@@ -71,11 +62,11 @@ class KnightSceneController {
     this._elapsedTime = 0;
     this._disposed = false;
     this.knight = null;
-    this._cardTextures = [];
 
     this.scene = createScene();
     this.camera = createCamera();
     this.renderer = createRenderer(canvas, this.options);
+    this.material = createMaterial();
     this.lights = setupLights(this.scene);
     this._env = setupEnvironment(this.renderer, this.scene);
     this.composer = this.options.useComposer
@@ -92,15 +83,13 @@ class KnightSceneController {
 
   async _bootstrap() {
     try {
-      const { group, textures } = await createCardModel(this.options, this.renderer);
-      this.knight = group;
-      this._cardTextures = textures;
+      this.knight = await createKnightModel(this.options.modelUrl);
       if (this._disposed) {
-        disposeObject3D(group);
-        disposeTextures(textures);
+        this.knight.geometry.dispose();
         return;
       }
 
+      this.knight.material = this.material;
       this.scene.add(this.knight);
       updateSpinScreenDirection(this);
       this._raf = requestAnimationFrame(() => animationLoop(this));
@@ -137,8 +126,9 @@ class KnightSceneController {
     window.removeEventListener('pointerup', this._onPointerUp);
     window.removeEventListener('pointercancel', this._onPointerUp);
 
-    disposeObject3D(this.knight);
-    disposeTextures(this._cardTextures);
+    this.knight?.geometry?.dispose();
+    this.material.dispose();
+    this.material.normalMap?.dispose();
     this.renderer.dispose();
     if (this.composer) this.composer.dispose();
     this._env?.dispose?.();
@@ -153,8 +143,8 @@ function createScene() {
 }
 
 function createCamera() {
-  const camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, 0.1, 100);
-  camera.position.set(CAMERA_DISTANCE, 0.42, 0.05);
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+  camera.position.set(1.45, 0.42, 0.05);
   camera.lookAt(0, 0.42, 0);
   return camera;
 }
@@ -176,129 +166,76 @@ function createRenderer(canvas, options = {}) {
   return renderer;
 }
 
-async function createCardModel(options = {}, renderer) {
-  const frontTexture = await loadCardTexture(options.cardFrontUrl, renderer);
-  const backTexture = await loadCardTexture(options.cardBackUrl, renderer);
+async function createKnightModel(url = DEFAULT_MODEL_URL) {
+  const geometry = await new STLLoader().loadAsync(url);
+  geometry.computeVertexNormals();
 
-  const width = CARD_HEIGHT * CARD_ASPECT;
-  const shape = createRoundedRectShape(width, CARD_HEIGHT, CARD_CORNER_RADIUS);
-  const body = createCardBody(shape);
-  const frontFace = createCardFace(shape, frontTexture, CARD_DEPTH * 0.52);
-  const backFace = createCardFace(shape, backTexture, -CARD_DEPTH * 0.52, Math.PI);
+  geometry.center();
+  geometry.computeBoundingBox();
+  const size = new THREE.Vector3();
+  geometry.boundingBox.getSize(size);
+  const scale = MODEL_HEIGHT / size.y;
+  geometry.scale(scale, scale, scale);
+  geometry.center();
+  geometry.computeBoundingBox();
 
-  const group = new THREE.Group();
-  group.add(body, frontFace, backFace);
-  group.position.y = CARD_HEIGHT * 0.5;
-  group.rotation.x = THREE.MathUtils.degToRad(-4);
+  geometry.rotateY(-Math.PI * 0.5);
+  geometry.rotateX(THREE.MathUtils.degToRad(-4));
+  geometry.computeVertexNormals();
 
-  return {
-    group,
-    textures: [frontTexture, backTexture],
-  };
-}
-
-function loadCardTexture(url, renderer) {
-  return new Promise((resolve, reject) => {
-    new THREE.TextureLoader().load(
-      url,
-      (texture) => {
-        const maxAnisotropy = renderer?.capabilities?.getMaxAnisotropy?.() ?? 1;
-        texture.colorSpace = THREE.SRGBColorSpace;
-        texture.minFilter = THREE.LinearMipmapLinearFilter;
-        texture.magFilter = THREE.LinearFilter;
-        texture.wrapS = THREE.ClampToEdgeWrapping;
-        texture.wrapT = THREE.ClampToEdgeWrapping;
-        texture.generateMipmaps = true;
-        texture.anisotropy = Math.min(MAX_TEXTURE_ANISOTROPY, maxAnisotropy);
-        resolve(texture);
-      },
-      undefined,
-      reject,
-    );
-  });
-}
-
-function createRoundedRectShape(width, height, radius) {
-  const x = -width * 0.5;
-  const y = -height * 0.5;
-  const r = Math.min(radius, width * 0.2, height * 0.2);
-  const shape = new THREE.Shape();
-  shape.moveTo(x + r, y);
-  shape.lineTo(x + width - r, y);
-  shape.quadraticCurveTo(x + width, y, x + width, y + r);
-  shape.lineTo(x + width, y + height - r);
-  shape.quadraticCurveTo(x + width, y + height, x + width - r, y + height);
-  shape.lineTo(x + r, y + height);
-  shape.quadraticCurveTo(x, y + height, x, y + height - r);
-  shape.lineTo(x, y + r);
-  shape.quadraticCurveTo(x, y, x + r, y);
-  return shape;
-}
-
-function createCardBody(shape) {
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: CARD_DEPTH,
-    bevelEnabled: false,
-    curveSegments: 18,
-    steps: 1,
-  });
-  geometry.translate(0, 0, -CARD_DEPTH * 0.5);
-
-  const material = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(COLOR_EDGE),
-    metalness: 0.14,
-    roughness: 0.52,
-    clearcoat: 0.24,
-    clearcoatRoughness: 0.2,
-    envMapIntensity: 0.9,
-  });
-
-  return new THREE.Mesh(geometry, material);
-}
-
-function createCardFace(shape, texture, zOffset, rotationY = 0) {
-  const geometry = new THREE.ShapeGeometry(shape, 18);
-  const position = geometry.attributes.position;
-  const uv = geometry.attributes.uv;
-  const width = CARD_HEIGHT * CARD_ASPECT;
-
-  for (let index = 0; index < position.count; index += 1) {
-    const x = position.getX(index);
-    const y = position.getY(index);
-    uv.setXY(index, (x + width * 0.5) / width, (y + CARD_HEIGHT * 0.5) / CARD_HEIGHT);
-  }
-
-  const material = new THREE.MeshPhysicalMaterial({
-    map: texture,
-    transparent: true,
-    side: THREE.DoubleSide,
-    metalness: 0.03,
-    roughness: 0.58,
-    clearcoat: 0.68,
-    clearcoatRoughness: 0.18,
-    envMapIntensity: 1.05,
-  });
-
-  const mesh = new THREE.Mesh(geometry, material);
-  mesh.position.z = zOffset;
-  mesh.rotation.y = rotationY;
+  const mesh = new THREE.Mesh(geometry);
+  mesh.position.y = MODEL_HEIGHT * 0.5;
   return mesh;
 }
 
-function disposeObject3D(object) {
-  if (!object) return;
-  object.traverse((child) => {
-    child.geometry?.dispose?.();
-    if (Array.isArray(child.material)) {
-      child.material.forEach((material) => material?.dispose?.());
-      return;
-    }
-    child.material?.dispose?.();
-  });
+function createFrostNormalMap() {
+  const size = 256;
+  const data = new Uint8Array(size * size * 4);
+
+  for (let index = 0; index < size * size; index += 1) {
+    const grain = 118 + Math.random() * 36;
+    const stride = index * 4;
+    data[stride] = grain;
+    data[stride + 1] = grain;
+    data[stride + 2] = 255;
+    data[stride + 3] = 255;
+  }
+
+  const map = new THREE.DataTexture(data, size, size, THREE.RGBAFormat);
+  map.wrapS = map.wrapT = THREE.RepeatWrapping;
+  map.repeat.set(6, 6);
+  map.needsUpdate = true;
+  return map;
 }
 
-function disposeTextures(textures = []) {
-  textures.forEach((texture) => texture?.dispose?.());
+function createMaterial() {
+  const normalMap = createFrostNormalMap();
+  return new THREE.MeshPhysicalMaterial({
+    color: new THREE.Color(COLOR_MID),
+    metalness: 0,
+    roughness: 0.22,
+    transmission: 0.96,
+    thickness: 2.2,
+    ior: 1.5,
+    transparent: true,
+    opacity: 1,
+    attenuationColor: new THREE.Color(COLOR_DEEP),
+    attenuationDistance: 0.82,
+    clearcoat: 0.5,
+    clearcoatRoughness: 0.12,
+    specularIntensity: 0.9,
+    specularColor: new THREE.Color(COLOR_BRIGHT),
+    envMapIntensity: 1.65,
+    emissive: new THREE.Color(COLOR_BRIGHT),
+    emissiveIntensity: 0.065,
+    sheen: 0.35,
+    sheenRoughness: 0.45,
+    sheenColor: new THREE.Color(COLOR_MID),
+    normalMap,
+    normalScale: new THREE.Vector2(0.12, 0.12),
+    side: THREE.DoubleSide,
+    depthWrite: false,
+  });
 }
 
 function setupLights(scene) {

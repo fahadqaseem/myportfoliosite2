@@ -7,19 +7,15 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { ShaderPass } from 'three/examples/jsm/postprocessing/ShaderPass.js';
 import { BokehPass } from 'three/examples/jsm/postprocessing/BokehPass.js';
 
-const DEFAULT_CARD_FRONT_URL = '/cards/wsu_card_front.svg';
-const DEFAULT_CARD_BACK_URL = '/cards/wsu_card_back.svg';
+const DEFAULT_CARD_FRONT_URL = '/cards/wsu_card_front.png';
+const DEFAULT_CARD_BACK_URL = '/cards/wsu_card_back.png';
 
 const COLOR_DEEP = 0x143a5a;
 const COLOR_MID = 0x35678c;
 const COLOR_BRIGHT = 0x4c7a9e;
 const COLOR_EDGE = 0x173f35;
 
-const MAX_DESKTOP_PIXEL_RATIO = 2.5;
-const MAX_TEXTURE_ANISOTROPY = 8;
-const CAMERA_FOV = 44;
-const CAMERA_DISTANCE = 2;
-const CARD_HEIGHT = 0.66;
+const CARD_HEIGHT = 0.60;
 const CARD_ASPECT = 1.586;
 const CARD_DEPTH = 0.009;
 const CARD_CORNER_RADIUS = 0.06;
@@ -48,7 +44,7 @@ class KnightSceneController {
   constructor(canvas, options = {}) {
     this.canvas = canvas;
     this.options = {
-      pixelRatio: Math.min(window.devicePixelRatio, MAX_DESKTOP_PIXEL_RATIO),
+      pixelRatio: Math.min(window.devicePixelRatio, 2),
       cardFrontUrl: options.cardFrontUrl ?? DEFAULT_CARD_FRONT_URL,
       cardBackUrl: options.cardBackUrl ?? DEFAULT_CARD_BACK_URL,
       bloomStrength: options.bloomStrength ?? 0.42,
@@ -92,7 +88,7 @@ class KnightSceneController {
 
   async _bootstrap() {
     try {
-      const { group, textures } = await createCardModel(this.options, this.renderer);
+      const { group, textures } = await createCardModel(this.options);
       this.knight = group;
       this._cardTextures = textures;
       if (this._disposed) {
@@ -153,8 +149,8 @@ function createScene() {
 }
 
 function createCamera() {
-  const camera = new THREE.PerspectiveCamera(CAMERA_FOV, 1, 0.1, 100);
-  camera.position.set(CAMERA_DISTANCE, 0.42, 0.05);
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
+  camera.position.set(1.45, 0.42, 0.05);
   camera.lookAt(0, 0.42, 0);
   return camera;
 }
@@ -176,9 +172,9 @@ function createRenderer(canvas, options = {}) {
   return renderer;
 }
 
-async function createCardModel(options = {}, renderer) {
-  const frontTexture = await loadCardTexture(options.cardFrontUrl, renderer);
-  const backTexture = await loadCardTexture(options.cardBackUrl, renderer);
+async function createCardModel(options = {}) {
+  const frontTexture = await loadCardTexture(options.cardFrontUrl);
+  const backTexture = await loadCardTexture(options.cardBackUrl);
 
   const width = CARD_HEIGHT * CARD_ASPECT;
   const shape = createRoundedRectShape(width, CARD_HEIGHT, CARD_CORNER_RADIUS);
@@ -197,19 +193,16 @@ async function createCardModel(options = {}, renderer) {
   };
 }
 
-function loadCardTexture(url, renderer) {
+function loadCardTexture(url) {
   return new Promise((resolve, reject) => {
     new THREE.TextureLoader().load(
       url,
       (texture) => {
-        const maxAnisotropy = renderer?.capabilities?.getMaxAnisotropy?.() ?? 1;
         texture.colorSpace = THREE.SRGBColorSpace;
         texture.minFilter = THREE.LinearMipmapLinearFilter;
         texture.magFilter = THREE.LinearFilter;
         texture.wrapS = THREE.ClampToEdgeWrapping;
         texture.wrapT = THREE.ClampToEdgeWrapping;
-        texture.generateMipmaps = true;
-        texture.anisotropy = Math.min(MAX_TEXTURE_ANISOTROPY, maxAnisotropy);
         resolve(texture);
       },
       undefined,
