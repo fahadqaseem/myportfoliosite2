@@ -246,11 +246,11 @@ function createCardBody(shape) {
 
   const material = new THREE.MeshPhysicalMaterial({
     color: new THREE.Color(COLOR_EDGE),
-    metalness: 0.14,
-    roughness: 0.52,
-    clearcoat: 0.24,
-    clearcoatRoughness: 0.2,
-    envMapIntensity: 0.9,
+    metalness: 0.08,
+    roughness: 0.68,
+    clearcoat: 0.08,
+    clearcoatRoughness: 0.5,
+    envMapIntensity: 0.45,
   });
 
   return new THREE.Mesh(geometry, material);
@@ -272,11 +272,11 @@ function createCardFace(shape, texture, zOffset, rotationY = 0) {
     map: texture,
     transparent: true,
     side: THREE.DoubleSide,
-    metalness: 0.03,
-    roughness: 0.58,
-    clearcoat: 0.68,
-    clearcoatRoughness: 0.18,
-    envMapIntensity: 1.05,
+    metalness: 0.01,
+    roughness: 0.82,
+    clearcoat: 0.16,
+    clearcoatRoughness: 0.72,
+    envMapIntensity: 0.35,
   });
 
   const mesh = new THREE.Mesh(geometry, material);
