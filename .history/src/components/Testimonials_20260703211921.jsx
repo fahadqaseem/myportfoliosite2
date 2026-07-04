@@ -19,7 +19,7 @@ const testimonials = [
     initials: 'AG',
   },
   {
-    quote: 'FEED ME MORE!',
+    quote: 'Feed me more!',
     name: 'Faraz Mehdi',
     title: 'PhD Physics',
     company: 'Wayne State University',
