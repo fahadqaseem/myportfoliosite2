@@ -5,6 +5,13 @@ import './Testimonials.css';
 
 const testimonials = [
   {
+    quote: 'A highly creative and exceptional professional to collaborate with!',
+    name: 'Baratheshwar',
+    title: 'Collaborator',
+    company: 'Professional Recommendation',
+    initials: 'B',
+  },
+  {
     quote: 'Fahad brings a rare mix of product thinking and technical execution. He moves quickly, but the work stays clean and considered.',
     name: 'Alex Johnson',
     title: 'Senior Engineer',
@@ -31,13 +38,6 @@ const testimonials = [
     title: 'Supervisor',
     company: 'Internship',
     initials: 'NC',
-  },
-  {
-    quote: 'A highly creative and exceptional professional to collaborate with!',
-    name: 'Baratheshwar',
-    title: 'Collaborator',
-    company: 'Professional Recommendation',
-    initials: 'B',
   },
 ];
 
