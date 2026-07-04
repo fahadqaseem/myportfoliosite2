@@ -12,6 +12,20 @@ const testimonials = [
     initials: 'B',
   },
   {
+    quote: 'He has great communication and networking skills. He is a great collaborator.',
+    name: 'Amna Gillani',
+    title: 'PhD English',
+    company: 'Wayne State University',
+    initials: 'AG',
+  },
+  {
+    quote: 'Feed me more!',
+    name: 'Faraz Mehdi',
+    title: 'PhD Physics',
+    company: 'Wayne State University',
+    initials: 'FM',
+  },
+  {
     quote: 'Fahad brings a rare mix of product thinking and technical execution. He moves quickly, but the work stays clean and considered.',
     name: 'Alex Johnson',
     title: 'Senior Engineer',
