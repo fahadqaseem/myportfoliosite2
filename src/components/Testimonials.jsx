@@ -32,6 +32,13 @@ const testimonials = [
     company: 'Internship',
     initials: 'NC',
   },
+  {
+    quote: 'A highly creative and exceptional professional to collaborate with!',
+    name: 'Baratheshwar',
+    title: 'Collaborator',
+    company: 'Professional Recommendation',
+    initials: 'B',
+  },
 ];
 
 export default function Testimonials() {

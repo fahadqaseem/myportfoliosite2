@@ -4,9 +4,10 @@ import KnightScene from '../KnightScene.jsx';
 import './About.css';
 
 const words = [
-  "I", "build", "intelligent", "systems", "that", "feel", "human.",
-  "Blending", "software", "engineering", "with", "artificial", "intelligence,",
-  "I", "create", "experiences", "that", "are", "both", "powerful", "and", "intuitive."
+  "I", "build", "full-stack", "AI", "systems", "that", "turn", "complex", "research",
+  "into", "usable", "software.", "From", "OCR", "evaluation", "pipelines", "to",
+  "computer", "vision", "and", "generative", "models,", "I", "focus", "on", "measurable,",
+  "reliable,", "human-centered", "results."
 ];
 
 export default function About() {

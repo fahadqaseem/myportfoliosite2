@@ -40,7 +40,7 @@ export default function Hero() {
           transition={{ duration: 1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
           className="hero-subtitle text-gradient"
         >
-          AI and Software Engineering Intern
+          AI/ML and Software Engineer
         </motion.h2>
         
         <motion.p
@@ -49,7 +49,7 @@ export default function Hero() {
           transition={{ duration: 1, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
           className="hero-description"
         >
-          Bridging the gap between intelligent systems and human-centric design.
+          Building full-stack AI systems, evaluation pipelines, and research-driven products that turn complex models into usable tools.
         </motion.p>
 
         <ScrollArrow />
